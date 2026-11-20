@@ -5,7 +5,7 @@ from flask import current_app, g
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS uploads (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    kind          TEXT NOT NULL,              -- readings | swaps
+    kind          TEXT NOT NULL,              -- readings | estimates | swaps
     filename      TEXT,
     status        TEXT NOT NULL,              -- applied | rejected
     message       TEXT,
@@ -28,6 +28,21 @@ CREATE TABLE IF NOT EXISTS swaps (
     upload_id INTEGER NOT NULL REFERENCES uploads(id),
     PRIMARY KEY (point, ts)
 );
+
+-- 估读（暂估读数）：与实抄读数同格式（point,ts,value），独立存放。
+-- 采纳状态随每次相关补传增量重核；同刻存在实抄时让位于实抄（superseded）。
+CREATE TABLE IF NOT EXISTS estimates (
+    point     TEXT NOT NULL,
+    ts        TEXT NOT NULL,
+    value     TEXT NOT NULL,                  -- 十进制估读累计值（kWh），文本保存
+    status    TEXT NOT NULL,                  -- adopted | rejected
+    reason    TEXT,                           -- 未采纳原因（adopted 时为 NULL）
+    upload_id INTEGER NOT NULL REFERENCES uploads(id),
+    PRIMARY KEY (point, ts)
+);
+
+CREATE INDEX IF NOT EXISTS idx_estimates_point_ts
+    ON estimates(point, ts);
 """
 
 

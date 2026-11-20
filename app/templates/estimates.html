@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}估读采纳状态 - 电量日核算{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>估读采纳状态</h2>
+  <form method="get" action="{{ url_for('main.estimates_page') }}" class="query">
+    <label>计量点
+      <select name="point">
+        <option value="">全部</option>
+        {% for p in points %}
+        <option value="{{ p }}" {{ 'selected' if p == point }}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">筛选</button>
+  </form>
+  <p class="hint">
+    采纳规则：估读位于两条相邻实抄之间、该实抄区间内无换表，且插入全部中间估读后读数不倒退，
+    才随整段一并采纳；补传实抄/估读/换表后只重核受影响分段，状态随批次同事务生效。
+  </p>
+  <table>
+    <thead>
+      <tr><th>计量点</th><th>时刻 (UTC)</th><th>估读值 (kWh)</th><th>采纳状态</th><th>未采纳原因</th><th>来源批次</th><th>上传时间</th></tr>
+    </thead>
+    <tbody>
+      {% for e in rows %}
+      <tr class="{{ e['status'] }}">
+        <td>{{ e['point'] }}</td>
+        <td>{{ e['ts'] | fmt_ts }}</td>
+        <td class="num">{{ e['value'] }}</td>
+        <td>{{ '已采纳' if e['status'] == 'adopted' else '未采纳' }}</td>
+        <td>{{ reason_text(e['reason']) }}</td>
+        <td>#{{ e['upload_id'] }}</td>
+        <td>{{ e['uploaded_at'] | fmt_ts }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="hint">暂无估读记录</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

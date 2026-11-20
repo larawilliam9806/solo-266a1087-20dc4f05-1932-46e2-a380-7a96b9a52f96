@@ -13,6 +13,12 @@
     </label>
     <label>开始日期 <input type="date" name="start" value="{{ start }}"></label>
     <label>结束日期 <input type="date" name="end" value="{{ end }}"></label>
+    <label>口径
+      <select name="basis">
+        <option value="actual" {{ 'selected' if basis == 'actual' }}>实抄（默认）</option>
+        <option value="provisional" {{ 'selected' if basis == 'provisional' }}>暂估（含已采纳估读）</option>
+      </select>
+    </label>
     <button type="submit">查询</button>
   </form>
 </section>
@@ -23,21 +29,28 @@
 
 {% if days is not none %}
 <section class="card">
-  <h2>计量点 {{ point }}：{{ start }} ~ {{ end }}</h2>
+  <h2>计量点 {{ point }}：{{ start }} ~ {{ end }}
+    （{{ '暂估口径：实抄 + 已采纳估读' if basis == 'provisional' else '实抄口径' }}）</h2>
   <p>合计用量：<strong>{{ total | fmt_num }}</strong> kWh
      （数据版本 v{{ version }}，增量计入后次读数所属 UTC 日）</p>
   <table>
     <thead><tr><th>日期 (UTC)</th><th>用量 (kWh)</th><th>备注</th></tr></thead>
     <tbody>
       {% for d in days %}
-      <tr class="{{ 'gapday' if d.gap }}">
+      <tr class="{{ 'gapday' if d.gap }}{{ ' estday' if d.estimated }}">
         <td>{{ d.day }}</td>
         <td class="num">{{ d.kwh | fmt_num }}</td>
-        <td>{{ '含缺口区间' if d.gap }}</td>
+        <td>
+          {% if d.gap %}含缺口区间{% endif %}
+          {% if d.estimated %}<span class="tag">含以估读为端点的增量</span>{% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+  {% if basis == 'provisional' %}
+  <p class="hint">带标记的日期包含至少一条以已采纳估读为前次或后次端点的增量，属于暂估结果。</p>
+  {% endif %}
 </section>
 
 <section class="card">

@@ -53,6 +53,18 @@ th, td { border: 1px solid #e0e4e8; padding: 6px 10px; text-align: left; }
 th { background: #f0f3f6; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
 tr.gapday td { background: #fdf3e3; }
+tr.estday td { background: #eef4fb; }
+tr.gapday.estday td { background: #f6efe2; }
+tr.adopted td { color: #1d6b2f; }
+.tag {
+  display: inline-block;
+  background: #e2ecf8;
+  color: #1f4e79;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 12px;
+  margin-left: 6px;
+}
 tr.rejected td { color: #999; }
 .flash {
   border-radius: 6px;

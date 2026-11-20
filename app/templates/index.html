@@ -4,10 +4,16 @@
   <h2>上传 CSV</h2>
   <div class="uploads">
     <form method="post" action="{{ url_for('main.upload', kind='readings') }}" enctype="multipart/form-data">
-      <h3>电表读数</h3>
+      <h3>实抄读数</h3>
       <p class="hint">表头 <code>point,ts,value</code>：计量点、UTC 时刻（如 2026-01-02T03:04:05Z）、非负十进制千瓦时累计读数。</p>
       <input type="file" name="file" accept=".csv" required>
-      <button type="submit">上传读数</button>
+      <button type="submit">上传实抄读数</button>
+    </form>
+    <form method="post" action="{{ url_for('main.upload', kind='estimates') }}" enctype="multipart/form-data">
+      <h3>估读</h3>
+      <p class="hint">沿用读数 CSV（表头 <code>point,ts,value</code>）。同刻已有实抄时估读让位实抄；仅在两条相邻实抄之间、无换表且不倒退时整段采纳。</p>
+      <input type="file" name="file" accept=".csv" required>
+      <button type="submit">上传估读</button>
     </form>
     <form method="post" action="{{ url_for('main.upload', kind='swaps') }}" enctype="multipart/form-data">
       <h3>换表记录</h3>
@@ -29,10 +35,39 @@
     </label>
     <label>开始日期 <input type="date" name="start"></label>
     <label>结束日期 <input type="date" name="end"></label>
+    <label>口径
+      <select name="basis">
+        <option value="actual">实抄（默认）</option>
+        <option value="provisional">暂估（含已采纳估读）</option>
+      </select>
+    </label>
     <button type="submit">查询</button>
     <span class="hint">不填日期时默认该点数据的最近 31 天</span>
   </form>
   {% if not points %}<p class="hint">暂无数据，请先上传读数 CSV。</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>估读采纳状态（最近 20 条，<a href="{{ url_for('main.estimates_page') }}">查看全部</a>）</h2>
+  <table>
+    <thead>
+      <tr><th>计量点</th><th>时刻 (UTC)</th><th>估读值</th><th>采纳状态</th><th>未采纳原因</th><th>来源批次</th></tr>
+    </thead>
+    <tbody>
+      {% for e in estimates %}
+      <tr class="{{ e['status'] }}">
+        <td>{{ e['point'] }}</td>
+        <td>{{ e['ts'] | fmt_ts }}</td>
+        <td class="num">{{ e['value'] }}</td>
+        <td>{{ '已采纳' if e['status'] == 'adopted' else '未采纳' }}</td>
+        <td>{{ reason_text(e['reason']) }}</td>
+        <td>#{{ e['upload_id'] }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="hint">暂无估读记录</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </section>
 
 <section class="card">
